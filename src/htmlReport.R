@@ -28,33 +28,33 @@ options(warn=-1)
 kableStyle <- c("striped", "condensed", "hover", "responsive")
 
 #fastqc
-fastqcDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="_fastqc.html")))
-fastqcDirExists <- length(fastqcDir) == 1
+fastqcDir <- paste(base_dir, "fastqc", sep="/")
+fastqcDirExists <- dir.exists(fastqcDir)
 write(paste("fastqcDirExists: ", fastqcDirExists), stderr())
 
 #debarcoding
-debarcodeDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="debarcode_stats.txt")))
-debarcodeDirExists <- length(debarcodeDir) == 1
+debarcodeDir <- paste(base_dir, "debarcode", sep="/")
+debarcodeDirExists <- dir.exists(debarcodeDir)
 write(paste("debarcodeDirExists: ", debarcodeDirExists), stderr())
 
 #trimming
-trimDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="trimlog.log")))
-trimDirExists <- length(trimDir) == 1
+trimDir <- paste(base_dir, "cutadapt", sep="/")
+trimDirExists <- dir.exists(trimDir)
 write(paste("trimDirExists: ", trimDirExists), stderr())
 
 #alignments
-alignmentDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="rna_metrics.txt")))
-alignmentDirExists <- length(alignmentDir) == 1
+alignmentDir <- paste(base_dir, "alignment", sep="/")
+alignmentDirExists <- dir.exists(alignmentDir)
 write(paste("alignmentDirExists: ", alignmentDirExists), stderr())
 
 #deduplication
-dedupDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="dedup.log")))
-dedupDirExists <- length(dedupDir) == 1
+dedupDir <- paste(base_dir, "dedup", sep="/")
+dedupDirExists <- dir.exists(dedupDir)
 write(paste("dedupDirExists: ", dedupDirExists), stderr())
 
 #counts
-countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="miRNA.summary")))
-countsDirExists <- length(countsDir) == 1
+countsDir <- paste(base_dir, "counts", sep="/")
+countsDirExists <- dir.exists(counts)
 write(paste("countsDirExists: ", countsDirExists), stderr())
 
 #Logo and TOC; 
@@ -205,7 +205,7 @@ cat(" \n \n")
 #' `r if(debarcodeDirExists) { "## UMI Parsing {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=debarcodeDirExists, echo=FALSE, fig.asp=0.2, fig.align="center", message=F, results="asis"
 
-deb <- read.table(paste(debarcodeDir,"debarcode_stats.txt", sep="/"), fill=T)
+deb <- read.table(list.files(debarcodeDir, full.names=TRUE)[0], fill=T)
 inputReads <- as.numeric(as.character(deb$V3[1]))
 validBcReads <- as.numeric(as.character(deb$V3[2]))
 invalidBcReads <- inputReads-validBcReads
@@ -246,7 +246,7 @@ pl
 #+ eval=trimDirExists, echo=FALSE, fig.asp=0.2, fig.align="center"
 
 #Import metadata from cutadapt and format it
-rt <- read.table(paste(trimDir, "trimlog.log", sep="/"), skip=7, nrows=7, fill=T, sep=":") 
+rt <- read.table(list.files(trimDir, full.names=TRUE)[0], skip=7, nrows=7, fill=T, sep=":") 
 names(rt) <- c("Metric","Value")
 rt$Value <- as.numeric(gsub(",","",unlist(lapply(strsplit(as.character(rt$Value), split="\\s+"), `[[`, 2)))) #this is gross, i'm sorry for nesting 6 functions
 
@@ -283,8 +283,9 @@ kable(rt, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
 #+ eval=alignmentDirExists, echo=FALSE, fig.asp=0.5, fig.align="center", message=F, results="asis"
 
 #Using a subset of PICARD outputs
-rt <- read.table(paste(alignmentDir, "rna_metrics.txt", sep="/"), nrows=1, header=T, fill=T)
-starReport <- read.table(paste(alignmentDir, "Log.final.out", sep="/"), sep="|", fill=T)
+alignmentFiles <- list.files(alignmentDir, full.names=TRUE)
+rt <- read.table(alignmentFiles[grepl("rna_metrics.txt", alignmentFiles)], nrows=1, header=T, fill=T)
+starReport <- read.table(alignmentFiles[grepl("Log.final.out", alignmentFiles)], sep="|", fill=T)
 starReport$V2 <- gsub("\t","",starReport$V2)
 
 #parse out relevant stuff from STAR report
@@ -361,7 +362,7 @@ df$`Value` <- cell_spec(
 df$Value <- prettyNum(df$Value, big.mark = ",", scientific=FALSE)
 kable(df, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
 
-rt_cov <- read.table(paste(alignmentDir, "rna_metrics.txt", sep="/"), skip = 10, header=T, fill=T)
+rt_cov <- read.table(alignmentFiles[grepl("rna_metrics.txt", alignmentFiles)], skip = 10, header=T, fill=T)
 
 p2 <- plot_ly(width = 700) %>% 
   layout(
@@ -386,13 +387,14 @@ cat(" \n \n")
 
 #' `r if(dedupDirExists) { "## Deduplication {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
-umisObserved <- as.numeric(system(paste('grep -F "#umis"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d' ' -f5"), intern=T))
-inputAlignments <- as.numeric(system(paste('grep "Input Reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d' ' -f7"), intern=T))
-outputAlignments <- as.numeric(system(paste('grep "reads out"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d ' ' -f2"), intern=T))
-uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d ' ' -f2"), intern=T))
+dedupLog = list.files(dedupDir, full.names=TRUE)[0]
+umisObserved <- as.numeric(system(paste('grep -F "#umis"', dedupLog, "| cut -d' ' -f5"), intern=T))
+inputAlignments <- as.numeric(system(paste('grep "Input Reads"', dedupLog, "| cut -d' ' -f7"), intern=T))
+outputAlignments <- as.numeric(system(paste('grep "reads out"', dedupLog, "| cut -d: -f4"), intern=T))
+meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', dedupLog, "| cut -d: -f4"), intern=T))
+maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', dedupLog, "| cut -d: -f4"), intern=T))
+uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', dedupLog, "| cut -d ' ' -f2"), intern=T))
+uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', dedupLog, "| cut -d ' ' -f2"), intern=T))
 
 df <- data.frame("Total input alignments" = inputAlignments,
                  "Total output alignments" = outputAlignments,
@@ -429,9 +431,11 @@ kable(df, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
 #' `r if(countsDirExists) { "## Transcriptome {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=countsDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
 
+countsFiles <- list.files(countsDir, full.names=TRUE)
+
 #parse genecounts summary for longRNA
 write("Processing gene_counts_longRNA.summary", stderr())
-longRNAcounts <- read.table(paste(countsDir, "gene_counts_longRNA.summary", sep="/"), skip=1)
+longRNAcounts <- read.table(countsFiles[grepl("longRNAs.*\.summary", countsFiles)[0]], skip=1)
 colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
@@ -459,7 +463,7 @@ longRNAcounts$`Count` <- cell_spec(
 
 #parse genecounts summary for miRNA
 write("Processing gene_counts_miRNA.summary", stderr())
-miRNAcounts <- read.table(paste(countsDir, "gene_counts_miRNA.summary", sep="/"), skip=1)
+miRNAcounts <- read.table(countsFiles[grepl("miRNAs.*\.summary", countsFiles)[0]], skip=1)
 colnames(miRNAcounts) <- c("Result", "Count")
 miRNAcounts$Result <- gsub("_", " ", miRNAcounts$Result)
 miRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(miRNAcounts$Count)), miRNAcounts)
@@ -487,12 +491,12 @@ miRNAcounts$`Count` <- cell_spec(
 
 #handle biotypes
 write("Processing gene_counts_longRNA", stderr())
-countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+countLong <- read.table(countsFiles[grepl("longRNAs.*\.gene_counts$", countsFiles)[0]], header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 write("Processing gene_counts_miRNA", stderr())
-countMicro <- read.table(paste(countsDir, "gene_counts_miRNA", sep="/"), header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+countMicro <- read.table(countsFiles[grepl("miRNAs.*\.gene_counts$", countsFiles)[0]], header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 countMicro$gene_biotype <- "miRNA"
 write("Processing gene_biotypes.tsv", stderr())
-biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
+biotypes <- read.table(biotypes_file, sep="\t", header=T)
 
 countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
 countAll <- rbind(countLong, countMicro)
@@ -537,24 +541,12 @@ env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column
 umi_tools_version <- system("umi_tools --version", intern=T)
 umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
 env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
-write("Preparing to read imageInfo.txt", stderr())
-containerInfo <- read.table("/opt/biorad/imageInfo.txt", stringsAsFactors=FALSE)
-write("Read imageInfo.txt", stderr())
-containerInfo <- data.frame("rowname" = paste(containerInfo[,1], containerInfo[,2]), env = containerInfo[,3], stringsAsFactors=FALSE)
-containerInfo[3,2] <- substr(containerInfo[3,2], 1,7)
-anno_path <- unlist(strsplit(anno_dir,"/"))
-referenceGenome <- anno_path[grepl("hg38|mm10|rnor6", anno_path)]
-if(length(referenceGenome) == 0)
-{
-	referenceGenome = "NA"
-}
-isErcc <- any(grepl("ercc", anno_path))
-write(paste("Preparing to read: ", paste(anno_dir,"annotation_version.txt", sep="/")), stderr())
-anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), comment.char="", fill=T, sep=",")
+write(paste("Preparing to read: ", anno_file), stderr())
+anno_version <- read.table(anno_file, comment.char="", fill=T, sep=",")
 write("Read annotation_version", stderr())
 anno_source <- gsub("#!annotation-source ", "", anno_version$V1[grep("annotation-source", anno_version$V1)])
 localVars <- data.frame(rowname = c("Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
-env <- rbind(containerInfo, localVars, env)
+env <- rbind(localVars, env)
 env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
 colnames(env) <- NULL
 kable(env, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)

@@ -6,7 +6,10 @@ comArgs <- commandArgs(TRUE)
 
 base_dir <- comArgs[1]
 temp_dir <- comArgs[2]
-anno_dir <- comArgs[3]
+biotypes_file <- comArgs[3]
+anno_file <- comArgs[4]
+referenceGenome <- comArgs[5]
+isErcc <- comArgs[6] == "ercc"
 
 write(paste("anno_dir: ", anno_dir), stderr())
 
