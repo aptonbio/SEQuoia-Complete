@@ -11,8 +11,6 @@ anno_file <- comArgs[4]
 referenceGenome <- comArgs[5]
 isErcc <- comArgs[6] == "ercc"
 
-write(paste("anno_dir: ", anno_dir), stderr())
-
 setwd(temp_dir)
 
 htmlReport <- paste(temp_dir, "htmlReport.R", sep="/")
