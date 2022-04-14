@@ -435,7 +435,7 @@ countsFiles <- list.files(countsDir, full.names=TRUE)
 
 #parse genecounts summary for longRNA
 write("Processing gene_counts_longRNA.summary", stderr())
-longRNAcounts <- read.table(countsFiles[grepl("longRNAs.*\.summary", countsFiles)[0]], skip=1)
+longRNAcounts <- read.table(countsFiles[grepl("longRNAs.*\\.summary", countsFiles)[0]], skip=1)
 colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
@@ -463,7 +463,7 @@ longRNAcounts$`Count` <- cell_spec(
 
 #parse genecounts summary for miRNA
 write("Processing gene_counts_miRNA.summary", stderr())
-miRNAcounts <- read.table(countsFiles[grepl("miRNAs.*\.summary", countsFiles)[0]], skip=1)
+miRNAcounts <- read.table(countsFiles[grepl("miRNAs.*\\.summary", countsFiles)[0]], skip=1)
 colnames(miRNAcounts) <- c("Result", "Count")
 miRNAcounts$Result <- gsub("_", " ", miRNAcounts$Result)
 miRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(miRNAcounts$Count)), miRNAcounts)
@@ -491,9 +491,9 @@ miRNAcounts$`Count` <- cell_spec(
 
 #handle biotypes
 write("Processing gene_counts_longRNA", stderr())
-countLong <- read.table(countsFiles[grepl("longRNAs.*\.gene_counts$", countsFiles)[0]], header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+countLong <- read.table(countsFiles[grepl("longRNAs.*\\.gene_counts$", countsFiles)[0]], header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 write("Processing gene_counts_miRNA", stderr())
-countMicro <- read.table(countsFiles[grepl("miRNAs.*\.gene_counts$", countsFiles)[0]], header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+countMicro <- read.table(countsFiles[grepl("miRNAs.*\\.gene_counts$", countsFiles)[0]], header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 countMicro$gene_biotype <- "miRNA"
 write("Processing gene_biotypes.tsv", stderr())
 biotypes <- read.table(biotypes_file, sep="\t", header=T)
