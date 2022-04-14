@@ -371,20 +371,20 @@ kable(df, "latex", booktabs = T) %>%
 
 countsFiles <- list.files(countsDir, full.names=TRUE)
 
-longRNAcounts <- read.table(countsFiles[grepl("longRNAs.*\.summary", countsFiles)[0]], skip=1)
+longRNAcounts <- read.table(countsFiles[grepl("longRNAs.*[:.:]summary", countsFiles)[0]], skip=1)
 colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
 
 #parse genecounts summary for miRNA
-miRNAcounts <- read.table(countsFiles[grepl("miRNAs.*\.summary", countsFiles)[0]], skip=1)
+miRNAcounts <- read.table(countsFiles[grepl("miRNAs.*[:.:]summary", countsFiles)[0]], skip=1)
 colnames(miRNAcounts) <- c("Result", "Count")
 miRNAcounts$Result <- gsub("_", " ", miRNAcounts$Result)
 miRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(miRNAcounts$Count)), miRNAcounts)
 
 #handle biotypes
-countLong <- read.table(countsFiles[grepl("longRNAs.*\.gene_counts$", countsFiles)[0]], sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-countMicro <- read.table(countsFiles[grepl("miRNAs.*\.gene_counts$", countsFiles)[0]], sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+countLong <- read.table(countsFiles[grepl("longRNAs.*[:.:]gene_counts$", countsFiles)[0]], sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+countMicro <- read.table(countsFiles[grepl("miRNAs.*[:.:]gene_counts$", countsFiles)[0]], sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 countMicro$gene_biotype <- "miRNA"
 biotypes <- read.table(biotypes_file, sep="\t", header=T)
 
