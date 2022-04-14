@@ -54,7 +54,7 @@ write(paste("dedupDirExists: ", dedupDirExists), stderr())
 
 #counts
 countsDir <- paste(base_dir, "counts", sep="/")
-countsDirExists <- dir.exists(counts)
+countsDirExists <- dir.exists(countsDir)
 write(paste("countsDirExists: ", countsDirExists), stderr())
 
 #Logo and TOC; 
