@@ -90,6 +90,10 @@ qcFiles <- list.files(fastqcDir, full.names=TRUE)[grepl("zip",list.files(fastqcD
 r1 <- qcFiles[grepl("_R1_",qcFiles)]
 r2 <- qcFiles[grepl("_R2_",qcFiles)]
 
+if (length(r1) == 0 || length(r2) == 0) {
+  stop("cannot find QC files containing R1/R2 in file name")
+}
+
 r1Qc <- sapply(r1, parseQcFile, simplify=F)
 
 r1QcDf <- list.cbind(r1Qc)
