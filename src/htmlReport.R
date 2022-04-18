@@ -442,7 +442,7 @@ kable(df, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
 countsFiles <- list.files(countsDir, full.names=TRUE)
 
 #parse genecounts summary for longRNA
-longRNASummaryFile <- countsFiles[grepl("longRNAs.*[:.:]summary", countsFiles)[0]]
+longRNASummaryFile <- countsFiles[grepl("longRNAs.*[:.:]summary", countsFiles)][0]
 write(c("Processing ", longRNASummaryFile), stderr())
 longRNAcounts <- read.table(longRNASummaryFile, skip=1)
 colnames(longRNAcounts) <- c("Result", "Count")
@@ -471,7 +471,7 @@ longRNAcounts$`Count` <- cell_spec(
 )
 
 #parse genecounts summary for miRNA
-miRNASummaryFile <- countsFiles[grepl("miRNAs.*[:.:]summary", countsFiles)[0]]
+miRNASummaryFile <- countsFiles[grepl("miRNAs.*[:.:]summary", countsFiles)][0]
 write(c("Processing ", miRNASummaryFile), stderr())
 miRNAcounts <- read.table(miRNASummaryFile, skip=1)
 colnames(miRNAcounts) <- c("Result", "Count")
@@ -500,10 +500,10 @@ miRNAcounts$`Count` <- cell_spec(
 ) 
 
 #handle biotypes
-countLongFile <- countsFiles[grepl("longRNAs.*[:.:]gene_counts$", countsFiles)[0]]
+countLongFile <- countsFiles[grepl("longRNAs.*[:.:]gene_counts$", countsFiles)][0]
 write(c("Processing ", countLongFile), stderr())
 countLong <- read.table(countLongFile, header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-countMicroFile <- countsFiles[grepl("miRNAs.*[:.:]gene_counts$", countsFiles)[0]]
+countMicroFile <- countsFiles[grepl("miRNAs.*[:.:]gene_counts$", countsFiles)][0]
 write(c("Processing ", countMicroFile), stderr())
 countMicro <- read.table(countMicroFile, header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 countMicro$gene_biotype <- "miRNA"
