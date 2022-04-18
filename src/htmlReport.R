@@ -548,17 +548,18 @@ cat(" \n \n")
 
 #' `r if(TRUE) { "## Pipeline Metadata {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
-env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","BEDTOOLS_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
-env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
-umi_tools_version <- system("umi_tools --version", intern=T)
-umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
-env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
+#env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","BEDTOOLS_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+#env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
+#umi_tools_version <- system("umi_tools --version", intern=T)
+#umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
+#env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
 write(paste("Preparing to read: ", anno_file), stderr())
 anno_version <- read.table(anno_file, comment.char="", fill=T, sep=",")
 write("Read annotation_version", stderr())
 anno_source <- gsub("#!annotation-source ", "", anno_version$V1[grep("annotation-source", anno_version$V1)])
 localVars <- data.frame(rowname = c("Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
-env <- rbind(localVars, env)
+#env <- rbind(localVars, env)
+env <- localVars
 env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
 colnames(env) <- NULL
 kable(env, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
