@@ -7,7 +7,7 @@
 #' - \setmainfont{FreeSans}
 #' - \usepackage{booktabs}
 #' - \usepackage[table]{xcolor}
-#' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
+#' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/vendor-logo.png}\\[\bigskipamount]}
 #' - \posttitle{\end{center}\newpage}
 #' output: 
 #'   pdf_document:
