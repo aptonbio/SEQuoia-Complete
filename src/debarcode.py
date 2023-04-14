@@ -61,8 +61,7 @@ def main():
 
     close_output = args.output_file is not None
     output_fastq = open(args.output_file, "w") if close_output else sys.stdout
-    if args.excluded_file:
-        excluded = open(args.excluded_file, "w")
+    excluded = open(args.excluded_file, "w") if args.excluded_file else None
 
     try:
         with open(args.input_file) as input_tsv:
