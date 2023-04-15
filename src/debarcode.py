@@ -59,16 +59,19 @@ def main():
     assert args.umi_length > 0
     assert args.max_umi_missing < args.umi_length
 
+    close_input = args.input_file is not None
+    input_tsv = open(args.input_file) if close_input else sys.stdin
     close_output = args.output_file is not None
     output_fastq = open(args.output_file, "w") if close_output else sys.stdout
     excluded = open(args.excluded_file, "w") if args.excluded_file else None
 
     try:
-        with open(args.input_file) as input_tsv:
-            num_good, num_bad = debarcode(
-                input_tsv, output_fastq, excluded, args.umi_length, args.max_umi_missing
-            )
+        num_good, num_bad = debarcode(
+            input_tsv, output_fastq, excluded, args.umi_length, args.max_umi_missing
+        )
     finally:
+        if close_input:
+            input_tsv.close()
         if close_output:
             output_fastq.close()
         if excluded:
