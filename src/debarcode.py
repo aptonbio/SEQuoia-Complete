@@ -12,34 +12,51 @@ def format_record(record, umi):
 
 
 def debarcode(
-    input_tsv, output_fastq, excluded, expected_umi_length=8, max_umi_missing=1
+    input_tsv,
+    output_fastq,
+    excluded,
+    umi_start=0,
+    umi_end=8,
+    max_umi_missing=1,
+    pad_umis=False,
 ) -> Tuple[int, int]:
+    expected_umi_length = umi_end - umi_start
     num_good = 0
     num_bad = 0
     for record in csv.reader(input_tsv, delimiter="\t"):
-        umi = record[5].rstrip()
+        umi = record[5].rstrip()[umi_start:umi_end]
         umi_length = len(umi)
         if umi_length > expected_umi_length:
             raise Exception(
                 f"UMI {umi} longer than expected length {expected_umi_length}"
             )
+
         # exclude any reads where the number of non-N bases is less than
         # expected_umi_length - max_umi_missing
-        missing = expected_umi_length - umi_length
+        num_missing = expected_umi_length - umi_length
+        if num_missing > 0 and not pad_umis:
+            if excluded:
+                excluded.write(format_record(record, umi))
+            num_bad += 1
+            continue
+
+        num_ns = 0
         i = 0
         while True:
-            if missing > max_umi_missing:
+            if (num_missing + num_ns) > max_umi_missing:
                 if excluded:
                     excluded.write(format_record(record, umi))
                 num_bad += 1
                 break
             elif i >= umi_length:
+                if num_missing > 0:
+                    umi += "N" * num_missing
                 output_fastq.write(format_record(record, umi))
                 num_good += 1
                 break
             else:
                 if umi[i] == "N":
-                    missing += 1
+                    num_ns += 1
                 i += 1
 
     return (num_good, num_bad)
@@ -52,12 +69,36 @@ def main():
     parser.add_argument("-x", "--excluded-file", default=None)
     parser.add_argument("-s", "--stats-file", default=None)
     parser.add_argument("--no-stats", action="store_true", default=False)
-    parser.add_argument("--umi-length", type=int, default=8)
-    parser.add_argument("--max-umi-missing", type=int, default=1)
+    parser.add_argument(
+        "--umi-start",
+        type=int,
+        default=0,
+        help="Starting position of the UMI in the R2 sequence",
+    )
+    parser.add_argument(
+        "--umi-end",
+        type=int,
+        default=8,
+        help="Ending position of the UMI in the R2 sequence",
+    )
+    parser.add_argument(
+        "--max-umi-missing",
+        type=int,
+        default=1,
+        help="Maximum number of missing UMI bases",
+    )
+    parser.add_argument(
+        "--pad-umis",
+        action="store_true",
+        default=False,
+        help="Add N's to UMIs whose length is less than '--umi-length'; if not specified, then "
+        "UMIs shorter than '--umi-length' are excluded",
+    )
     args = parser.parse_args()
 
-    assert args.umi_length > 0
-    assert args.max_umi_missing < args.umi_length
+    assert args.umi_start >= 0
+    assert args.umi_end > args.umi_start
+    assert args.max_umi_missing < (args.umi_end - args.umi_start)
 
     close_input = args.input_file is not None
     input_tsv = open(args.input_file) if close_input else sys.stdin
@@ -67,7 +108,13 @@ def main():
 
     try:
         num_good, num_bad = debarcode(
-            input_tsv, output_fastq, excluded, args.umi_length, args.max_umi_missing
+            input_tsv,
+            output_fastq,
+            excluded,
+            args.umi_start,
+            args.umi_end,
+            args.max_umi_missing,
+            args.pad_umis,
         )
     finally:
         if close_input:
